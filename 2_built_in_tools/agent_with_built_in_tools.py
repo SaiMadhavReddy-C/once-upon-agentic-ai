@@ -1,13 +1,15 @@
 from strands import Agent
-# TODO: Import the current_time built-in tool
+from strands_tools import current_time
 
+# Create an agent with the current_time built-in tool
 agent = Agent(
-    tools=[
-        # TODO: Add the current_time tool to your agent
-    ]
+    system_prompt=(
+        "You are a helpful assistant. "
+        "When the user asks about the current time or date, "
+        "use the current_time tool to get the accurate answer."
+    ),
+    tools=[current_time],
 )
 
-result = agent("What time is it?")
-
-print(result)
-
+# Ask the agent a time-related question
+agent("What time is it?")

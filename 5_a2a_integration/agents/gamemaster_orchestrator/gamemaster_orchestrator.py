@@ -1,115 +1,104 @@
-import os
-import sys
 import uvicorn
+from pathlib import Path
 from fastapi import FastAPI
-from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
-from typing import List
-from tinydb import TinyDB, Query
+from pydantic import BaseModel
+
 from strands import Agent
-from strands.tools.mcp import MCPClient
-from mcp.client.streamable_http import streamablehttp_client
 from strands_tools.a2a_client import A2AClientToolProvider
+from tinydb import TinyDB, Query
 
 app = FastAPI(title="D&D Game Master API")
-origins = ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=[
+        "https://aws-samples.github.io",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+
+
 class QuestionRequest(BaseModel):
     question: str
 
+
+SYSTEM_PROMPT = """
+You are a D&D Game Master orchestrator.
+
+You have access to two specialized remote agents:
+
+1. Rules Agent:
+   http://127.0.0.1:8000
+
+2. Character Agent:
+   http://127.0.0.1:8001
+
+Use the Rules Agent for D&D rules questions.
+Use the Character Agent for creating, finding, or listing characters.
+Do not invent information when one of the specialized agents can answer it.
+"""
+
+
+provider = A2AClientToolProvider(
+    known_agent_urls=[
+        "http://127.0.0.1:8000",
+        "http://127.0.0.1:8001",
+    ]
+)
+
+agent = Agent(
+    system_prompt=SYSTEM_PROMPT,
+    tools=provider.tools,
+)
+
+
+@app.get("/")
+def root():
+    return {
+        "status": "ok",
+        "service": "D&D Game Master",
+        "endpoint": "/inquire",
+    }
+
+
 @app.get("/health")
-def health_check():
+def health():
     return {"status": "healthy"}
+
 
 @app.get("/messages")
 def get_messages():
     return agent.messages
 
+
 @app.get("/user/{user_name}")
-def get_user(user_name):
-    characters_db = TinyDB('./../character_agent/characters.json')
-    Character_Query = Query()
-    result = characters_db.search(Character_Query.name == user_name)
-    if not result:
-        return f":x: Character with name '{user_name}' not found"
+def get_user(user_name: str):
+    # Same database used by the Character Agent
+    db_path = Path(__file__).resolve().parents[2] / "characters.json"
 
-    character = result[0]
-    print(f"✅ Found character: {character['name']} (ID: {character['character_id']}, {character['character_class']} {character['race']})")
-    return character
+    characters_db = TinyDB(db_path)
+    query = Query()
 
-# System prompt for the agent
-SYSTEM_PROMPT = """You are a D&D Game Master orchestrator with access to specialized agents and tools.
-
-Available agents:
-- Rules Agent, for D&D mechanics and rules
-- Character Agent, for character creation and management
-
-To communicate with agents:
-1. Use a2a_list_discovered_agents to see available agents
-2. Use a2a_send_message with the agent's URL to send questions
-3. Use roll_dice for dice rolling
-
-Available D&D dice types:
-- d4 (4-sided die) - Used for damage rolls of small weapons like daggers
-- d6 (6-sided die) - Used for damage rolls of weapons like shortswords, spell damage
-- d8 (8-sided die) - Used for damage rolls of weapons like longswords, rapiers
-- d10 (10-sided die) - Used for damage rolls of heavy weapons, percentile rolls
-- d12 (12-sided die) - Used for damage rolls of great weapons like greataxes
-- d20 (20-sided die) - Used for ability checks, attack rolls, saving throws
-- d100 (percentile die) - Used for random tables, wild magic surges
-
-IMPORTANT: Always use the exact URLs shown by a2a_list_discovered_agents. Never invent or guess URLs.
-
-Be creative, engaging, and use your available tools to enhance the D&D experience.
-"""
-
-class DiceOutput(BaseModel):
-    dice_type: str = Field(description="The dice type. Ex: d4, d6, d20, etc")
-    result: int = Field(description="The dice result value alone")
-    reason: str = Field(description="The reason the dice was rolled. Ex: attack roll. And the modificators if there was any")
-
-class StoryOutput(BaseModel):
-    """Model that contains information about a Person"""
-    response: str = Field(description="Your narative response as Game Master")
-    actions_suggestions: list[str] = Field(description="['Action 1', 'Action 2', 'Action 3']")
-    destails: str = Field(description="Brief summary of tools/agents used")
-    dice_rolls: List[DiceOutput] = Field(default=[], description="List of dice rolls with dice_type, result, and reason")
-
-try:
-    # TODO: Create MCP Client for dice rolling service
-    # Initialize MCPClient with a lambda that returns streamablehttp_client("http://localhost:8002/mcp")
-    mcp_client = None
-
-    # TODO: Create the A2A client with the A2AClientToolProvider and pass the list of the known agent urls
-    a2a_client = None
-
-    agent = Agent(
-        system_prompt=SYSTEM_PROMPT,
-        # TODO: Create the gamemaster agent with both A2A and MCP tools
-        # TODO: Force the response to use the StoryOutput model
+    result = characters_db.search(
+        query.name.test(lambda value: str(value).lower() == user_name.lower())
     )
-except Exception as e:
-    print(f"Error occurred: {str(e)}")
+
+    if not result:
+        return {"error": f"Character with name '{user_name}' not found"}
+
+    return result[0]
+
 
 @app.post("/inquire")
-async def ask_agent(request: QuestionRequest):
-    print("Processing request...")
-    try:
-        response = await agent.invoke_async(request.question)
-        print(response.structured_output)
-        return JSONResponse(content={ "response": response.structured_output.model_dump()})
-        
-    except Exception as e:
-        print(f"Error occurred: {str(e)}")
-        return JSONResponse(content={"error": "Internal server error"}, status_code=500)
+async def inquire(request: QuestionRequest):
+    response = await agent.invoke_async(request.question)
+    return {"response": str(response)}
+
 
 if __name__ == "__main__":
-    uvicorn.run(app, port=8009)
+    print("🎲 Game Master running on http://127.0.0.1:8009")
+    uvicorn.run(app, host="127.0.0.1", port=8009)

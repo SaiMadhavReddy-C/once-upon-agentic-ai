@@ -211,4 +211,5 @@ output/
 
 # ChromaDB knowledge base (generated files)
 dnd_knowledge_base/
-**/dnd_knowledge_base/
+**/dnd_knowledge_base/5_a2a_integration/characters.json
+5_a2a_integration/characters.json
