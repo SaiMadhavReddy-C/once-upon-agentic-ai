@@ -1,86 +1,197 @@
-# Once Upon Agentic AI: A Developer's Epic Journey into the Strands SDK
+# 🌟 Once Upon Agentic AI
 
+> An AI-powered D&D Game Master built with AWS Strands Agents, Amazon Bedrock, MCP, A2A, FastAPI, and Python.
 
-![Header Image](images/home.png)
+## 🚀 Overview
 
-_"Roll for Initiative... in Python!"_
+**Once Upon Agentic AI** is a multi-agent D&D Game Master that demonstrates how AI agents can use tools, communicate with specialized agents, and work together to create an interactive game experience.
 
-# ------> [LINK TO THE AWS WORKSHOP](https://catalog.us-east-1.prod.workshops.aws/workshops/e1493217-4bc7-42f4-87d9-e231acd743bc/en-US/0-pre-requisites)
+The project was developed as part of the AWS Workshop Studio **"Once Upon Agentic AI: A Developer's Epic Journey"** and extended into a working local application with a web interface.
 
-Welcome, brave adventurer, to the ultimate Strands framework quest! This comprehensive workshop will transform you from a coding apprentice into a master of AI agent orchestration. Through five epic chapters, you'll learn to create, equip, and command digital companions that can think, act, and collaborate like a legendary adventuring party. Follow the instructions in the following [workshop](https://catalog.us-east-1.prod.workshops.aws/workshops/e1493217-4bc7-42f4-87d9-e231acd743bc/en-US/0-pre-requisites).
+## ✨ Features
 
-## 🛠️ Setup
+* 🤖 **Strands AI Agents** — Build and orchestrate AI agents using the Strands Agents SDK.
+* 🎲 **Custom Dice Tools** — Create and execute custom D&D dice-rolling tools.
+* 🧰 **Built-in Tools** — Equip agents with reusable tools.
+* 🔌 **Model Context Protocol (MCP)** — Expose dice functionality through an MCP server.
+* 🤝 **Agent-to-Agent (A2A)** — Connect specialized agents for rules and character management.
+* 📚 **Rules Agent** — Handles D&D rules questions.
+* 🎭 **Character Agent** — Creates, stores, finds, and manages player characters.
+* 🎮 **Game Master Orchestrator** — Coordinates specialized agents to answer player requests.
+* 🌐 **FastAPI Backend** — Provides API endpoints for the Game Master.
+* 💻 **Web UI Integration** — Connect the local Game Master to the workshop web interface.
+* ☁️ **Amazon Bedrock** — Provides foundation-model inference for the agents.
 
-Dependencies are declared in `pyproject.toml` — that's the single source of truth for both `uv` and plain `pip`.
+## 🏗️ Architecture
 
-**Using [uv](https://docs.astral.sh/uv/) (recommended):**
+```text
+                    ┌──────────────────────┐
+                    │      Web UI          │
+                    └──────────┬───────────┘
+                               │ HTTPS
+                               ▼
+                    ┌──────────────────────┐
+                    │  Game Master API     │
+                    │      FastAPI         │
+                    └──────────┬───────────┘
+                               │
+                    ┌──────────┴───────────┐
+                    │                      │
+                    ▼                      ▼
+          ┌─────────────────┐    ┌─────────────────────┐
+          │   Rules Agent   │    │   Character Agent   │
+          │                 │    │                     │
+          │ D&D rule logic  │    │ Character management│
+          └─────────────────┘    └─────────────────────┘
+                    │                      │
+                    └──────────┬───────────┘
+                               │ A2A
+                               ▼
+                    ┌──────────────────────┐
+                    │   Agent Orchestration│
+                    └──────────────────────┘
 
-```bash
-uv sync
+             MCP Layer
+                    │
+                    ▼
+             ┌───────────────┐
+             │ Dice Service  │
+             │   MCP Server  │
+             └───────────────┘
+
+                    │
+                    ▼
+             Amazon Bedrock
 ```
 
-Prefix workshop commands with `uv run`, e.g. `uv run python 1_strands_basics/simple_agent.py`.
+## 📂 Project Structure
 
-**Using pip:**
-
-```bash
-python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install .
+```text
+once-upon-agentic-ai/
+│
+├── 1_strands_basics/
+│   └── simple_agent.py
+│
+├── 2_built_in_tools/
+│   └── agent_with_built_in_tools.py
+│
+├── 3_custom_tools/
+│   └── agent_with_dice_roll_tool.py
+│
+├── 4_mcp_integration/
+│   ├── dice_roll_mcp_server.py
+│   └── gamemaster_mcp_client.py
+│
+├── 5_a2a_integration/
+│   ├── agents/
+│   │   ├── character_agent/
+│   │   ├── gamemaster_orchestrator/
+│   │   └── rules_agent/
+│   └── utils/
+│
+└── README.md
 ```
 
-The workshop deliberately does not pin exact versions (no `uv.lock`, no `requirements.txt`), so both commands install against the latest compatible releases of the Strands SDK. If a chapter breaks against a newer release, please open an issue.
+## 🧭 Workshop Journey
 
-## 🌐 ️ The Complete Adventure Map
+### Chapter 1 — First Agent
 
-Your journey through the realms of AI agents is carefully structured as a progressive quest. **Each chapter builds upon the previous one** - complete them in order to unlock the full power of Strands!
+Created the initial D&D Game Master using Strands Agents.
 
-### 🐉 [Chapter 0: An Unexpected Adventure](0_pre_requisites/)
-**Complete the prerequisites before going on an adventure!**
+### Chapter 2 — Built-in Tools
 
-### 🧙‍♂️ [Chapter 1: The Art of Agent Summoning](1_strands_basics/)
-**Master the fundamental ritual of agent creation**
-- Learn what Strands is and how it works
-- Summon your first AI companion
-- Configure models and system prompts
-- Understand the core concepts of agent development
+Added built-in tools that allow the agent to perform useful actions instead of relying only on generated text.
 
-### ⚔️ [Chapter 2: The Adventurer's Arsenal](2_built_in_tools/)
-**Equip your agents with built-in magical tools**
-- Discover Strands' powerful built-in tool library
-- Learn how agents autonomously choose and use tools
-- Master web scraping and information gathering
-- Understand tool consent and safety mechanisms
+### Chapter 3 — Custom Tools
 
-### 🔨 [Chapter 3: The Art of Magical Forging](3_custom_tools/)
-**Forge your own custom tools and enchantments**
-- Transform Python functions into agent tools
-- Create the legendary Dice of Destiny
-- Master the `@tool` decorator and documentation
-- Build domain-specific capabilities
+Created a custom dice-rolling tool and used tool calling to generate D&D ability scores.
 
-### 🌐 [Chapter 4: Planar Portals - MCP Integration](4_mcp_integration/)
-**Connect to external realms through Model Context Protocol**
-- Build and deploy MCP servers
-- Create MCP clients for agent integration
-- Understand distributed tool architectures
-- Master external service connections
+### Chapter 4 — MCP Integration
 
-### 🏰 [Chapter 5: The Grand Alliance - A2A Mastery](5_a2a_integration/)
-**Command multiple agents in perfect harmony**
-- Build a complete multi-agent D&D system
-- Master Agent-to-Agent (A2A) communication
-- Orchestrate specialized agents working together
-- Create complex distributed AI applications
+Built a remote dice-rolling service using the **Model Context Protocol (MCP)** and connected the Game Master to it.
 
-### 🎲 The Adventure Never Ends...
+### Chapter 5 — A2A Multi-Agent System
 
-Remember, the most epic adventures are the ones you create yourself. Whether you're building the next great AI application or just exploring the boundaries of what's possible, you now have the tools and knowledge to make it happen.
+Built a multi-agent architecture using **Agent-to-Agent (A2A)** communication:
 
-_May your agents be wise, your tools be sharp, and your code compile on the first try!_ 🎲✨
+* **Rules Agent** — D&D rules specialist
+* **Character Agent** — Character creation and management
+* **Game Master** — Orchestrates the specialized agents
+
+### Chapter 6 — Web Interface
+
+Connected the Game Master API to the workshop web interface and exposed the backend through HTTPS.
+
+### Chapter 7 — Advanced Enhancements
+
+Explored future ideas including:
+
+* Visual storytelling
+* NPC memory and relationship management
+* Multiplayer campaigns
+* Dynamic world generation
+* Advanced game mechanics
+* External service integrations
+
+## 🛠️ Tech Stack
+
+| Technology         | Purpose                      |
+| ------------------ | ---------------------------- |
+| Python             | Application development      |
+| AWS Strands Agents | AI agent framework           |
+| Amazon Bedrock     | Foundation-model inference   |
+| MCP                | Tool/service integration     |
+| A2A                | Agent-to-agent communication |
+| FastAPI            | Backend API                  |
+| Uvicorn            | ASGI server                  |
+| TinyDB             | Local character storage      |
+| Cloudflare Tunnel  | HTTPS access to local API    |
+
+## 🎯 What I Learned
+
+This project helped me gain practical experience with:
+
+* Designing AI agents around specialized responsibilities
+* Building custom tools for AI agents
+* Connecting agents to external services with MCP
+* Designing multi-agent systems with A2A
+* Building APIs for AI applications
+* Connecting an AI backend to a web interface
+* Debugging dependency and integration issues
+* Handling cross-origin requests with CORS
+* Building and testing an end-to-end agentic AI application
+
+## 🔐 Security Notes
+
+This project is intended for learning and experimentation.
+
+Do **not** commit:
+
+* AWS access keys
+* Secret keys
+* API keys
+* `.env` files
+* Personal credentials
+* Runtime database files containing private information
+
+## 📌 Workshop
+
+Built as part of:
+
+**AWS Workshop Studio — Once Upon Agentic AI: A Developer's Epic Journey**
+
+The project demonstrates the progression from a single AI agent to a multi-agent system with tool use, MCP, A2A communication, and a web interface.
+
+## 👨‍💻 Author
+
+**Challa Sai Madhav Reddy**
+
+GitHub:
+https://github.com/SaiMadhavReddy-C
+
+LinkedIn:
+https://www.linkedin.com/in/sai-madhav-challa-bb9663384
 
 ---
 
-**"The best way to predict the future is to build the agents that will create it."** - Modern Developer Wisdom
-
-_Happy coding, Agent Master! 🐉⚔️🧙‍♂️_
+⭐ If you found this project interesting, feel free to explore the code and build your own agentic AI application.
